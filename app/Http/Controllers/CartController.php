@@ -12,19 +12,16 @@ class CartController extends Controller
     public function index()
     {
         $cartItems = Cart::with('menuItem')->where('user_id', Auth::id())->get();
-        return response()->json($cartItems->map(function ($item) {
-            return [
-                'id' => $item->id,
-                'menu_item' => $item->menuItem,
-                'quantity' => $item->quantity,
-            ];
-        }));
+        $totalPrice = $cartItems->sum(function ($item) {
+            return $item->menuItem->price * $item->quantity;
+        });
+        return view('cart', compact('cartItems', 'totalPrice'));
     }
 
     public function count()
     {
         $count = Cart::where('user_id', Auth::id())->count();
-        return response()->json(['count' => $count]);
+        return view('cart.count', compact('count'));
     }
 
     public function add(Request $request)
@@ -53,7 +50,7 @@ class CartController extends Controller
             ]);
         }
 
-        return response()->json(['message' => 'آیتم به سبد خرید اضافه شد!'], 200);
+        return redirect()->route('cart')->with('success', 'آیتم به سبد خرید اضافه شد!');
     }
 
     public function update(Request $request, $id)
@@ -66,14 +63,14 @@ class CartController extends Controller
         $cartItem->quantity = $request->quantity;
         $cartItem->save();
 
-        return response()->json(['message' => 'سبد خرید به‌روزرسانی شد']);
+        return redirect()->route('cart')->with('success', 'سبد خرید به‌روزرسانی شد');
     }
 
-    public function remove($id)
+    public function destroy($id)
     {
         $cartItem = Cart::where('user_id', Auth::id())->findOrFail($id);
         $cartItem->delete();
 
-        return response()->json(['message' => 'آیتم از سبد خرید حذف شد']);
+        return redirect()->route('cart')->with('success', 'آیتم از سبد خرید حذف شد');
     }
 }
