@@ -68,12 +68,18 @@
 
 class="bg-white shadow-md p-4">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="text-2xl font-bold text-pink-600">لوگوی وب‌سایت</div>
+
+            <div class="text-2xl font-bold text-pink-600">
+                <a href="{{ route('home') }}">لوگوی وب‌سایت</a>
+            </div>
+
+
             <div class="search-bar flex items-center w-1/2">
                 <input type="text" id="searchInput" placeholder="جستجوی رستوران، غذا یا محله..."
                     class="w-full bg-transparent outline-none">
                 <i class="fas fa-search text-gray-500"></i>
             </div>
+
             <div class="flex items-center space-x-4">
                 <!-- در بخش ناویگیشن layouts/app.blade.php -->
                 <div class="cart-icon">
@@ -84,11 +90,47 @@ class="bg-white shadow-md p-4">
                         </span>
                     </a>
                 </div>
+
                 @auth
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('profile') }}" class="bg-pink-600 text-white px-4 py-2 rounded-full">پروفایل</a>
+                        <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                            @csrf
+                            <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-full">خروج</button>
+                        </form>
+                    </div>
+                @else
+                    <a href="{{ route('login') }}" id="loginBtn" class="bg-pink-600 text-white px-4 py-2 rounded-full">ورود / ثبت‌نام</a>
+                @endauth
+
+                
+                {{-- کدجدید --}}
+                {{-- @auth
+                    <a href="{{ route('profile') }}" class="bg-pink-600 text-white px-4 py-2 rounded-full">پروفایل</a>
+                    <form action="{{ route('logout') }}" method="POST" class="logout-form">
+                        @csrf
+                        <button type="submit" class="logout-btn flex items-center text-gray-700 hover:text-pink-600">
+                            <i class="fas fa-sign-out-alt text-2xl"></i>
+                            <span class="ml-1">خروج</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" id="loginBtn"
+                        class="flex items-center text-gray-700 hover:text-pink-600">
+                        <i class="fas fa-sign-in-alt text-2xl"></i>
+                        <span class="ml-1">ورود</span>
+                    </a>
+                @endauth --}}
+
+                {{-- کد قدیم --}}
+                {{-- @auth
                     <a href="{{ route('profile') }}" class="bg-pink-600 text-white px-4 py-2 rounded-full">پروفایل</a>
                 @else
                     <button id="loginBtn" class="bg-pink-600 text-white px-4 py-2 rounded-full">ورود / ثبت‌نام</button>
-                @endauth
+                @endauth --}}
+
+
+
             </div>
         </div>
     </header>
