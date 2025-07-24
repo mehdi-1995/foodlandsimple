@@ -1,11 +1,5 @@
 {
   "laravel": {
-    "phpVersion": "^8.1"
-  },
-  "app": "mpayam",
-  "port": 3000,
-  "build": {
-    "location": "iran"
-  },
-  "disks": []
+    "phpVersion": "8.2"
+  }
 }
