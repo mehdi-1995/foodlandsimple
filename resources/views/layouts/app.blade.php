@@ -1,34 +1,45 @@
 <script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+
+    function filledCell(cell) {
+        return cell !== '' && cell != null;
+    }
+
+    function loadFileData(filename) {
         if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
             try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var workbook = XLSX.read(gk_fileData[filename], {
+                    type: 'base64'
+                });
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
 
                 // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                    header: 1,
+                    blankrows: false,
+                    defval: ''
+                });
                 // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
 
                 // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
                 // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
+                    headerRowIndex = 0;
                 }
 
                 // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(
+                    headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, {
+                    header: 1
+                });
                 return csv;
             } catch (e) {
                 console.error(e);
@@ -36,9 +47,11 @@
             }
         }
         return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+    }
+</script>
+<!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -48,6 +61,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/styles.css') }}">
 </head>
+
 <body class="bg-gray-100">
     <!-- هدر -->
     <header class=" 
@@ -56,13 +70,19 @@ class="bg-white shadow-md p-4">
         <div class="container mx-auto flex justify-between items-center">
             <div class="text-2xl font-bold text-pink-600">لوگوی وب‌سایت</div>
             <div class="search-bar flex items-center w-1/2">
-                <input type="text" id="searchInput" placeholder="جستجوی رستوران، غذا یا محله..." class="w-full bg-transparent outline-none">
+                <input type="text" id="searchInput" placeholder="جستجوی رستوران، غذا یا محله..."
+                    class="w-full bg-transparent outline-none">
                 <i class="fas fa-search text-gray-500"></i>
             </div>
             <div class="flex items-center space-x-4">
+                <!-- در بخش ناویگیشن layouts/app.blade.php -->
                 <div class="cart-icon">
-                    <a href="{{ route('cart') }}"><i class="fas fa-shopping-cart text-2xl text-gray-700"></i></a>
-                    <span class="badge" id="cartCount">0</span>
+                    <a href="{{ route('cart') }}" class="flex items-center">
+                        <i class="fas fa-shopping-cart text-2xl text-gray-700"></i>
+                        <span id="cartCount" class="badge ml-1">
+                            {{ auth()->check() ? \App\Models\Cart::where('user_id', auth()->id())->count() : 0 }}
+                        </span>
+                    </a>
                 </div>
                 @auth
                     <a href="{{ route('profile') }}" class="bg-pink-600 text-white px-4 py-2 rounded-full">پروفایل</a>
@@ -79,8 +99,10 @@ class="bg-white shadow-md p-4">
             <h2 class="text-xl font-bold mb-4">ورود / ثبت‌نام</h2>
             <form id="loginForm" action="{{ route('login') }}" method="POST">
                 @csrf
-                <input type="text" id="phone" name="phone" placeholder="شماره موبایل" class="w-full p-2 mb-4 border rounded">
-                <input type="password" id="password" name="password" placeholder="رمز عبور" class="w-full p-2 mb-4 border rounded">
+                <input type="text" id="phone" name="phone" placeholder="شماره موبایل"
+                    class="w-full p-2 mb-4 border rounded">
+                <input type="password" id="password" name="password" placeholder="رمز عبور"
+                    class="w-full p-2 mb-4 border rounded">
                 <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-full w-full">ورود</button>
             </form>
             <button id="closeModal" class="mt-4 text-gray-600">بستن</button>
@@ -125,4 +147,5 @@ class="bg-white shadow-md p-4">
 
     <script src="{{ asset('js/app.js') }}"></script>
 </body>
+
 </html>
