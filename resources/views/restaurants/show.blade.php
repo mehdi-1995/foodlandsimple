@@ -111,9 +111,6 @@
     <section class="my-6">
         <h2 class="text-2xl font-bold mb-4">نظرات کاربران</h2>
         <div class="bg-white rounded-lg shadow-md p-6">
-            @if (session('success'))
-                <div class="bg-green-100 text-green-700 p-4 rounded mb-4">{{ session('success') }}</div>
-            @endif
             @auth
                 <form id="reviewForm" action="{{ route('restaurants.reviews.store', $restaurant->id) }}" method="POST">
                     @csrf

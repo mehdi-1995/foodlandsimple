@@ -50,7 +50,7 @@ class CartController extends Controller
             ]);
         }
 
-        return redirect()->route('cart')->with('success', 'آیتم به سبد خرید اضافه شد!');
+        return back()->with('success', 'آیتم به سبد خرید اضافه شد!');
     }
 
     public function update(Request $request, $id)

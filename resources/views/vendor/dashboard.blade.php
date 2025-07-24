@@ -36,7 +36,7 @@
 
                 // Convert filtered JSON back to CSV
                 var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(
-                headerRowIndex)); // Create a new sheet from filtered array of arrays
+                    headerRowIndex)); // Create a new sheet from filtered array of arrays
                 csv = XLSX.utils.sheet_to_csv(csv, {
                     header: 1
                 });
@@ -55,9 +55,6 @@
 @section('content')
     <section class="my-6">
         <h2 class="text-2xl font-bold mb-4">داشبورد فروشنده</h2>
-        @if (session('success'))
-            <div class="bg-green-100 text-green-700 p-4 rounded mb-4">{{ session('success') }}</div>
-        @endif
         <div class="bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-bold">اطلاعات رستوران</h3>
             <p class="mt-2">نام: {{ $restaurant->name }}</p>
