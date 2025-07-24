@@ -17,7 +17,7 @@ class RestaurantController extends Controller
             return $q->where('name', 'like', "%$query%")->orWhere('category', 'like', "%$query%");
         })->when($type !== 'all', function ($q) use ($type) {
             return $q->where('type', $type);
-        })->get();
+        })->get(9);
         return response()->json($restaurants);
     }
 

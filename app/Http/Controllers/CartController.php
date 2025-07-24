@@ -34,22 +34,26 @@ class CartController extends Controller
             'quantity' => 'required|integer|min:1'
         ]);
 
-        $cartItem = Cart::where('user_id', Auth::id())
-            ->where('menu_item_id', $request->menu_item_id)
+        $userId = Auth::id();
+        $menuItemId = $request->input('menu_item_id');
+        $quantity = $request->input('quantity');
+
+        $cartItem = Cart::where('user_id', $userId)
+            ->where('menu_item_id', $menuItemId)
             ->first();
 
         if ($cartItem) {
-            $cartItem->quantity += $request->quantity;
+            $cartItem->quantity += $quantity;
             $cartItem->save();
         } else {
             Cart::create([
-                'user_id' => Auth::id(),
-                'menu_item_id' => $request->menu_item_id,
-                'quantity' => $request->quantity,
+                'user_id' => $userId,
+                'menu_item_id' => $menuItemId,
+                'quantity' => $quantity
             ]);
         }
 
-        return response()->json(['message' => 'آیتم به سبد خرید اضافه شد']);
+        return response()->json(['message' => 'آیتم به سبد خرید اضافه شد!'], 200);
     }
 
     public function update(Request $request, $id)

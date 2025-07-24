@@ -5,6 +5,7 @@ use App\Http\Controllers\RestaurantController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\VendorDashboardController;
 use App\Http\Controllers\CourierDashboardController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // مسیرهای عمومی (بدون نیاز به احراز هویت)

@@ -7,10 +7,16 @@ if (!token) {
 
 async function getCsrfToken() {
     try {
-        await fetch("http://127.0.0.1:8000/sanctum/csrf-cookie", {
-            method: "GET",
-            credentials: "include",
-        });
+        const response = await fetch(
+            "http://127.0.0.1:8000/sanctum/csrf-cookie",
+            {
+                method: "GET",
+                credentials: "include",
+            }
+        );
+        if (!response.ok) {
+            throw new Error("Failed to fetch CSRF token");
+        }
     } catch (error) {
         console.error("Error fetching CSRF token:", error);
     }
@@ -25,6 +31,9 @@ async function updateCartCount() {
                 "X-CSRF-TOKEN": token,
             },
         });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch cart count: ${response.status}`);
+        }
         const { count } = await response.json();
         const cartBadge = document.querySelector("#cartCount");
         if (cartBadge) cartBadge.textContent = count;
@@ -39,6 +48,9 @@ async function displayRestaurants(filter = "all") {
     try {
         const params = new URLSearchParams({ type: filter });
         const response = await fetch(`${apiBaseUrl}/restaurants?${params}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch restaurants: ${response.status}`);
+        }
         const restaurants = await response.json();
         restaurantList.innerHTML = "";
         restaurants.forEach((restaurant) => {
@@ -46,7 +58,9 @@ async function displayRestaurants(filter = "all") {
             card.className =
                 "restaurant-card bg-white rounded-lg shadow-md p-4";
             card.innerHTML = `
-                <img src="${restaurant.image}" alt="${
+                <img src="${
+                    restaurant.image || "/images/placeholder.jpg"
+                }" alt="${
                 restaurant.name
             }" class="w-full h-40 object-cover rounded-lg">
                 <h3 class="text-lg font-bold mt-2">${restaurant.name}</h3>
@@ -73,16 +87,20 @@ async function displayRestaurantDetails() {
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = parseInt(urlParams.get("id"));
     if (isNaN(restaurantId)) {
-        console.error("Invalid restaurant ID");
+        console.warn("No restaurant ID provided in URL");
         return;
     }
     try {
         const response = await fetch(
             `${apiBaseUrl}/restaurants/${restaurantId}`
         );
+        if (!response.ok) {
+            throw new Error(`Failed to fetch restaurant: ${response.status}`);
+        }
         const restaurant = await response.json();
         if (!restaurant) return;
-        document.querySelector("#restaurantImage").src = restaurant.image;
+        document.querySelector("#restaurantImage").src =
+            restaurant.image || "/images/placeholder.jpg";
         document.querySelector("#restaurantName").textContent = restaurant.name;
         document.querySelector("#restaurantCategory").textContent =
             restaurant.category;
@@ -100,29 +118,88 @@ async function displayRestaurantDetails() {
     }
 }
 
+function setupAddToCartButtons() {
+    const addToCartButtons = document.querySelectorAll(".add-to-cart");
+    console.log(`Found ${addToCartButtons.length} add-to-cart buttons`);
+    addToCartButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+            const itemId = parseInt(button.dataset.id);
+            console.log("Add to cart clicked, item ID:", itemId);
+            const tokenAuth = localStorage.getItem("token");
+            if (!tokenAuth) {
+                alert("لطفاً ابتدا وارد حساب کاربری خود شوید.");
+                const loginModal = document.querySelector("#loginModal");
+                if (loginModal) loginModal.style.display = "flex";
+                return;
+            }
+            try {
+                await getCsrfToken();
+                const response = await fetch(`${apiBaseUrl}/cart/add`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${tokenAuth}`,
+                        "X-CSRF-TOKEN": token,
+                        Accept: "application/json",
+                    },
+                    body: JSON.stringify({ menu_item_id: itemId, quantity: 1 }),
+                    credentials: "include",
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    await updateCartCount();
+                    alert(data.message || "آیتم به سبد خرید اضافه شد!");
+                } else {
+                    console.error("Server response:", data);
+                    alert(
+                        `خطا: ${
+                            data.message ||
+                            "مشکلی در افزودن به سبد خرید رخ داد."
+                        }`
+                    );
+                }
+            } catch (error) {
+                console.error("Error adding to cart:", error);
+                alert(
+                    "خطا در افزودن به سبد خرید: مشکلی در ارتباط با سرور رخ داد."
+                );
+            }
+        });
+    });
+}
+
 async function displayMenu(filter = "all") {
     const urlParams = new URLSearchParams(window.location.search);
     const restaurantId = parseInt(urlParams.get("id"));
     if (isNaN(restaurantId)) {
-        console.error("Invalid restaurant ID");
+        console.warn("No restaurant ID provided in URL");
         return;
     }
     const menuList = document.querySelector("#menuList");
-    if (!menuList) return;
+    if (!menuList) {
+        console.warn("Menu list element not found");
+        return;
+    }
     try {
         const response = await fetch(
             `${apiBaseUrl}/restaurants/${restaurantId}/menu`
         );
         let menuItems = await response.json();
-        if (filter !== "all")
+        if (!response.ok) {
+            throw new Error(
+                `Failed to fetch menu: ${menuItems.message || "Unknown error"}`
+            );
+        }
+        if (filter !== "all") {
             menuItems = menuItems.filter((item) => item.category === filter);
+        }
         menuList.innerHTML = "";
         menuItems.forEach((item) => {
             const menuItem = document.createElement("div");
             menuItem.className =
                 "menu-item bg-white rounded-lg shadow-md p-4 flex";
             menuItem.innerHTML = `
-                <img src="${item.image}" alt="${
+                <img src="${item.image || "/images/placeholder.jpg"}" alt="${
                 item.name
             }" class="w-24 h-24 object-cover rounded-lg">
                 <div class="mr-4">
@@ -136,41 +213,10 @@ async function displayMenu(filter = "all") {
             `;
             menuList.appendChild(menuItem);
         });
-
-        document.querySelectorAll(".add-to-cart").forEach((button) => {
-            button.addEventListener("click", async () => {
-                const itemId = parseInt(button.dataset.id);
-                try {
-                    await getCsrfToken();
-                    const response = await fetch(`${apiBaseUrl}/cart/add`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
-                            "X-CSRF-TOKEN": token,
-                        },
-                        body: JSON.stringify({
-                            menu_item_id: itemId,
-                            quantity: 1,
-                        }),
-                    });
-                    const data = await response.json();
-                    if (response.ok) {
-                        updateCartCount();
-                        alert(data.message);
-                    } else {
-                        alert("خطا: " + data.message);
-                    }
-                } catch (error) {
-                    console.error("Error adding to cart:", error);
-                    alert("خطا در افزودن به سبد خرید");
-                }
-            });
-        });
+        setupAddToCartButtons();
     } catch (error) {
         console.error("Error fetching menu:", error);
+        alert("خطا در بارگذاری منو: مشکلی در ارتباط با سرور رخ داد.");
     }
 }
 
@@ -185,10 +231,13 @@ async function displayCart() {
                 "X-CSRF-TOKEN": token,
             },
         });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch cart: ${response.status}`);
+        }
         const items = await response.json();
         cartItems.innerHTML = "";
         let totalPrice = 0;
-        items.forEach((item, index) => {
+        items.forEach((item) => {
             totalPrice += item.menu_item.price * item.quantity;
             const cartItem = document.createElement("div");
             cartItem.className =
@@ -341,6 +390,11 @@ async function displayVendorOrders() {
                 "X-CSRF-TOKEN": token,
             },
         });
+        if (!response.ok) {
+            throw new Error(
+                `Failed to fetch vendor orders: ${response.status}`
+            );
+        }
         const orders = await response.json();
         vendorOrders.innerHTML = "";
         orders.forEach((order) => {
@@ -418,6 +472,9 @@ async function displayVendorMenu() {
                 "X-CSRF-TOKEN": token,
             },
         });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch vendor menu: ${response.status}`);
+        }
         const menuItems = await response.json();
         vendorMenu.innerHTML = "";
         menuItems.forEach((item) => {
@@ -471,6 +528,11 @@ async function displayCourierOrders() {
                 "X-CSRF-TOKEN": token,
             },
         });
+        if (!response.ok) {
+            throw new Error(
+                `Failed to fetch courier orders: ${response.status}`
+            );
+        }
         const orders = await response.json();
         courierOrders.innerHTML = "";
         orders.forEach((order) => {
@@ -534,6 +596,7 @@ async function displayCourierOrders() {
 
 document.querySelectorAll(".menu-filter").forEach((button) => {
     button.addEventListener("click", () => {
+        console.log("Menu filter clicked:", button.dataset.category);
         document
             .querySelectorAll(".menu-filter")
             .forEach((btn) =>
@@ -552,6 +615,7 @@ document.querySelectorAll(".menu-filter").forEach((button) => {
 
 document.querySelectorAll(".category-filter").forEach((button) => {
     button.addEventListener("click", () => {
+        console.log("Category filter clicked:", button.dataset.category);
         document
             .querySelectorAll(".category-filter")
             .forEach((btn) =>
@@ -575,6 +639,11 @@ document
         try {
             const params = new URLSearchParams({ q: query });
             const response = await fetch(`${apiBaseUrl}/restaurants?${params}`);
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to fetch restaurants: ${response.status}`
+                );
+            }
             const restaurants = await response.json();
             const restaurantList = document.querySelector("#restaurantList");
             restaurantList.innerHTML = "";
@@ -583,7 +652,9 @@ document
                 card.className =
                     "restaurant-card bg-white rounded-lg shadow-md p-4";
                 card.innerHTML = `
-                <img src="${restaurant.image}" alt="${
+                <img src="${
+                    restaurant.image || "/images/placeholder.jpg"
+                }" alt="${
                     restaurant.name
                 }" class="w-full h-40 object-cover rounded-lg">
                 <h3 class="text-lg font-bold mt-2">${restaurant.name}</h3>
@@ -652,7 +723,9 @@ document.querySelector("#loginForm")?.addEventListener("submit", async (e) => {
             alert("ورود با موفقیت انجام شد!");
             updateCartCount();
             displayCart();
+            setupAddToCartButtons();
         } else {
+            console.error("Login failed:", data);
             alert("خطا در ورود: " + (data.message || "مشکل در احراز هویت"));
         }
     } catch (error) {
@@ -671,4 +744,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     displayVendorOrders();
     displayVendorMenu();
     displayCourierOrders();
+    setupAddToCartButtons();
 });

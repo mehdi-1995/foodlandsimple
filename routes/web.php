@@ -16,6 +16,9 @@ Route::post('/restaurants/{id}/reviews', [RestaurantController::class, 'storeRev
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
 Route::get('/cart/items', [CartController::class, 'items'])->name('cart.items');
+Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+Route::get('/cart/count', [CartController::class, 'count'])->name('cart.count');
 Route::get('/profile', [ProfileController::class, 'index'])->name('profile')->middleware('auth');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout')->middleware('auth');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('auth');
@@ -25,7 +28,8 @@ Route::delete('/vendor/menu/{id}', [VendorDashboardController::class, 'deleteMen
 Route::put('/vendor/orders/{id}/status', [VendorDashboardController::class, 'updateOrderStatus'])->name('vendor.orders.status')->middleware(['auth', 'role:vendor']);
 Route::get('/courier/dashboard', [CourierDashboardController::class, 'index'])->name('courier.dashboard')->middleware(['auth', 'role:courier']);
 Route::put('/courier/orders/{id}/status', [CourierDashboardController::class, 'updateOrderStatus'])->name('courier.orders.status')->middleware(['auth', 'role:courier']);
-
+Route::get('/courier/dashboard', [CourierDashboardController::class, 'index'])->name('courier.dashboard')->middleware(['auth', 'role:courier']);
+Route::put('/courier/orders/{id}/status', [CourierDashboardController::class, 'updateOrderStatus'])->name('courier.orders.status')->middleware(['auth', 'role:courier']);
 Route::get('/contact', function () {
     return view('contact');
 })->name('contact');
