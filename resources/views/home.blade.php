@@ -88,5 +88,8 @@
                 </div>
             @endforeach
         </div>
+        <div class="mt-6">
+            {{ $restaurants->links() }}
+        </div>
     </section>
 @endsection

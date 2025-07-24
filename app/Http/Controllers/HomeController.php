@@ -15,7 +15,7 @@ class HomeController extends Controller
             return $q->where('name', 'like', "%$query%")->orWhere('category', 'like', "%$query%");
         })->when($type !== 'all', function ($q) use ($type) {
             return $q->where('type', $type);
-        })->get();
+        })->paginate(9);
         return view('home', compact('restaurants'));
     }
 }
