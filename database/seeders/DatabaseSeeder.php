@@ -2,32 +2,60 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Restaurant;
+use App\Models\MenuItem;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Review;
+use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        User::create([
-            'name' => 'فروشنده نمونه',
-            'email' => 'vendor@example.com',
+        // ایجاد کاربران
+        User::factory()->create([
+            'name' => 'کاربر نمونه',
             'phone' => '09123456789',
             'password' => bcrypt('password'),
-            'role' => 'vendor'
+            'role' => 'customer',
+            'address' => 'تهران، خیابان نمونه'
         ]);
 
-        Restaurant::create([
-            'vendor_id' => 1,
-            'name' => 'رستوران نمونه',
-            'type' => 'restaurant',
-            'category' => 'ایرانی، فست‌فود',
-            'rating' => 4.5,
-            'reviews_count' => 120,
-            'delivery_cost' => 10000,
-            'delivery_time' => '30-45 دقیقه',
-            'image' => 'https://via.placeholder.com/600x200'
+        User::factory()->create([
+            'name' => 'فروشنده نمونه',
+            'phone' => '09123456790',
+            'password' => bcrypt('password'),
+            'role' => 'vendor',
+            'address' => 'تهران، خیابان نمونه'
         ]);
+
+        User::factory()->create([
+            'name' => 'پیک نمونه',
+            'phone' => '09123456791',
+            'password' => bcrypt('password'),
+            'role' => 'courier',
+            'address' => 'تهران، خیابان نمونه'
+        ]);
+
+        User::factory()->count(10)->create(['role' => 'customer']);
+        User::factory()->count(5)->create(['role' => 'vendor']);
+        User::factory()->count(5)->create(['role' => 'courier']);
+
+        // ایجاد رستوران‌ها
+        Restaurant::factory()->count(10)->create()->each(function ($restaurant) {
+            // ایجاد آیتم‌های منو برای هر رستوران
+            MenuItem::factory()->count(5)->create(['restaurant_id' => $restaurant->id]);
+
+            // ایجاد نظرات برای هر رستوران
+            Review::factory()->count(3)->create(['restaurant_id' => $restaurant->id]);
+        });
+
+        // ایجاد سفارشات
+        Order::factory()->count(20)->create()->each(function ($order) {
+            // ایجاد آیتم‌های سفارش
+            OrderItem::factory()->count(3)->create(['order_id' => $order->id]);
+        });
     }
 }

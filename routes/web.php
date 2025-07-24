@@ -23,9 +23,20 @@ Route::delete('/vendor/menu/{id}', [VendorDashboardController::class, 'deleteMen
 Route::put('/vendor/orders/{id}/status', [VendorDashboardController::class, 'updateOrderStatus'])->name('vendor.orders.status')->middleware(['auth', 'role:vendor']);
 Route::get('/courier/dashboard', [CourierDashboardController::class, 'index'])->name('courier.dashboard')->middleware(['auth', 'role:courier']);
 Route::put('/courier/orders/{id}/status', [CourierDashboardController::class, 'updateOrderStatus'])->name('courier.orders.status')->middleware(['auth', 'role:courier']);
-Route::get('/contact', function () { return view('contact'); })->name('contact');
-Route::get('/faq', function () { return view('faq'); })->name('faq');
-Route::get('/terms', function () { return view('terms'); })->name('terms');
+
+Route::get('/contact', function () {
+    return view('contact');
+})->name('contact');
+Route::post('/contact', function () {
+    // منطق ارسال پیام (می‌تونید از ایمیل یا ذخیره در دیتابیس استفاده کنید)
+    return redirect()->route('contact')->with('success', 'پیام شما با موفقیت ارسال شد!');
+})->name('contact.submit');
+Route::get('/faq', function () {
+    return view('faq');
+})->name('faq');
+Route::get('/terms', function () {
+    return view('terms');
+})->name('terms');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
