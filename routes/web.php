@@ -14,6 +14,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/restaurants/{id}', [RestaurantController::class, 'show'])->name('restaurants.show');
 Route::post('/restaurants/{id}/reviews', [RestaurantController::class, 'storeReview'])->name('restaurants.reviews.store');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
+Route::post('/cart/add', [CartController::class, 'add'])->name('cart.add');
+Route::get('/cart/items', [CartController::class, 'items'])->name('cart.items');
 Route::get('/profile', [ProfileController::class, 'index'])->name('profile')->middleware('auth');
 Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout')->middleware('auth');
 Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('auth');

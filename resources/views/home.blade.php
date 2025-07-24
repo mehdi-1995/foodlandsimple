@@ -88,7 +88,7 @@
                 </div>
             @endforeach
         </div>
-        <div class="mt-6">
+        <div class="mt-6 flex justify-center">
             {{ $restaurants->links() }}
         </div>
     </section>

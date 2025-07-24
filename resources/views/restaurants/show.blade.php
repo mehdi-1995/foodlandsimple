@@ -57,6 +57,8 @@
         </div>
     </section>
 
+    <script src="{{ asset('js/app.js') }}"></script>
+
     <!-- منوی غذا -->
     <section class="my-6">
         <h2 class="text-2xl font-bold mb-4">منوی رستوران</h2>

@@ -9,6 +9,22 @@ window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.add-to-cart').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-id');
+            axios.post('/cart/add', { item_id: itemId })
+                .then(function(response) {
+                    alert(response.data.message);
+                    // Optionally update cart count badge here
+                })
+                .catch(function(error) {
+                    alert('خطا در افزودن به سبد خرید');
+                });
+        });
+    });
+});
+
 /**
  * Echo exposes an expressive API for subscribing to channels and listening
  * for events that are broadcast by Laravel. Echo and event broadcasting

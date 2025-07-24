@@ -8,13 +8,13 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Review;
+use App\Models\Cart;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
-        // ایجاد کاربران
         User::factory()->create([
             'name' => 'کاربر نمونه',
             'phone' => '09123456789',
@@ -43,18 +43,13 @@ class DatabaseSeeder extends Seeder
         User::factory()->count(5)->create(['role' => 'vendor']);
         User::factory()->count(5)->create(['role' => 'courier']);
 
-        // ایجاد رستوران‌ها
         Restaurant::factory()->count(10)->create()->each(function ($restaurant) {
-            // ایجاد آیتم‌های منو برای هر رستوران
             MenuItem::factory()->count(5)->create(['restaurant_id' => $restaurant->id]);
-
-            // ایجاد نظرات برای هر رستوران
             Review::factory()->count(3)->create(['restaurant_id' => $restaurant->id]);
+            Cart::factory()->count(2)->create(['user_id' => User::where('role', 'customer')->inRandomOrder()->first()->id]);
         });
 
-        // ایجاد سفارشات
         Order::factory()->count(20)->create()->each(function ($order) {
-            // ایجاد آیتم‌های سفارش
             OrderItem::factory()->count(3)->create(['order_id' => $order->id]);
         });
     }

@@ -56,12 +56,34 @@
     <section class="my-6">
         <h2 class="text-2xl font-bold mb-4">سبد خرید</h2>
         <div class="bg-white rounded-lg shadow-md p-6">
-            <div id="cartItems"></div>
-            <div class="mt-4">
-                <p class="text-lg font-bold">مجموع: <span id="totalPrice">0</span> تومان</p>
-                <a href="{{ route('checkout') }}"
-                    class="mt-4 inline-block bg-pink-600 text-white px-4 py-2 rounded-full">تسویه حساب</a>
-            </div>
+            @if ($cartItems->isEmpty())
+                <p class="text-gray-600">سبد خرید شما خالی است.</p>
+            @else
+                <div id="cartItems" class="space-y-4">
+                    @foreach ($cartItems as $item)
+                        <div class="flex justify-between items-center border-b py-2">
+                            <div>
+                                <h3 class="text-lg font-bold">{{ $item->menuItem->name }}</h3>
+                                <p class="text-gray-600">{{ number_format($item->menuItem->price) }} تومان ×
+                                    {{ $item->quantity }}</p>
+                            </div>
+                            <div class="flex items-center">
+                                <button class="increment-quantity px-2" data-id="{{ $item->id }}">+</button>
+                                <span class="mx-2">{{ $item->quantity }}</span>
+                                <button class="decrement-quantity px-2" data-id="{{ $item->id }}">-</button>
+                                <button class="remove-item text-red-600 mr-4" data-id="{{ $item->id }}">حذف</button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="mt-4">
+                    <p class="text-lg font-bold">مجموع: <span
+                            id="totalPrice">{{ number_format($cartItems->sum(function ($item) {return $item->menuItem->price * $item->quantity;})) }}</span>
+                        تومان</p>
+                    <a href="{{ route('checkout') }}"
+                        class="mt-4 inline-block bg-pink-600 text-white px-4 py-2 rounded-full">تسویه حساب</a>
+                </div>
+            @endif
         </div>
     </section>
 @endsection

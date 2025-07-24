@@ -56,26 +56,48 @@
     <section class="my-6">
         <h2 class="text-2xl font-bold mb-4">تسویه حساب</h2>
         <div class="bg-white rounded-lg shadow-md p-6">
-            <div id="checkoutItems"></div>
-            <p class="text-lg font-bold mt-4">مجموع: <span id="totalPrice">0</span> تومان</p>
-            <form action="{{ route('checkout.store') }}" method="POST">
+            <div id="checkoutItems" class="space-y-4 mb-6">
+                @foreach ($cartItems as $item)
+                    <div class="flex justify-between items-center border-b py-2">
+                        <div>
+                            <h3 class="text-lg font-bold">{{ $item->menuItem->name }}</h3>
+                            <p class="text-gray-600">{{ number_format($item->menuItem->price) }} تومان ×
+                                {{ $item->quantity }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <p class="text-lg font-bold mb-4">مجموع: <span
+                    id="totalPrice">{{ number_format($cartItems->sum(function ($item) {return $item->menuItem->price * $item->quantity;})) }}</span>
+                تومان</p>
+
+            <form action="{{ route('checkout.store') }}" method="POST" class="space-y-4">
                 @csrf
-                <input type="hidden" name="restaurant_id" value="{{ request()->query('restaurant_id') ?? 1 }}">
-                <div class="mt-4">
+                <div>
+                    <label for="address" class="block text-gray-700">آدرس</label>
+                    <input type="text" id="address" name="address" class="w-full p-2 border rounded"
+                        value="{{ Auth::user()->address }}" required>
+                    @error('address')
+                        <p class="text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
                     <h3 class="text-lg font-bold">روش پرداخت</h3>
-                    <label class="block mt-2">
-                        <input type="radio" name="payment_method" value="online" checked> پرداخت آنلاین
-                    </label>
-                    <label class="block mt-2">
-                        <input type="radio" name="payment_method" value="cod"> پرداخت در محل
-                    </label>
+                    <div class="mt-2">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="payment_method" value="online" class="form-radio" required>
+                            <span class="mr-2">پرداخت آنلاین</span>
+                        </label>
+                        <label class="inline-flex items-center mr-4">
+                            <input type="radio" name="payment_method" value="cod" class="form-radio">
+                            <span class="mr-2">پرداخت در محل</span>
+                        </label>
+                    </div>
+                    @error('payment_method')
+                        <p class="text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
-                <div class="mt-4">
-                    <label for="address" class="block text-lg font-bold">آدرس</label>
-                    <input type="text" id="address" name="address" placeholder="آدرس تحویل"
-                        class="w-full p-2 border rounded">
-                </div>
-                <button type="submit" id="confirmOrder" class="mt-4 bg-pink-600 text-white px-4 py-2 rounded-full">تأیید
+                <button type="submit" id="confirmOrder" class="bg-pink-600 text-white px-4 py-2 rounded-full">تأیید
                     سفارش</button>
             </form>
         </div>

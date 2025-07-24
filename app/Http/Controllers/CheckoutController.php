@@ -2,54 +2,68 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CheckoutController extends Controller
 {
     public function index()
     {
-        return view('checkout');
+        $cartItems = Cart::with('menuItem')->where('user_id', Auth::id())->get();
+        if ($cartItems->isEmpty()) {
+            return redirect()->route('cart')->with('error', 'سبد خرید شما خالی است.');
+        }
+        return view('checkout', compact('cartItems'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
-            'items' => 'required|array',
-            'items.*.menu_item_id' => 'required|exists:menu_items,id',
-            'items.*.quantity' => 'required|integer|min:1',
             'payment_method' => 'required|in:online,cod',
-            'address' => 'required|string'
+            'address' => 'required|string|max:255',
         ]);
 
-        $total = 0;
-        foreach ($request->items as $item) {
-            $menuItem = MenuItem::find($item['menu_item_id']);
-            $total += $menuItem->price * $item['quantity'];
-        }
+        DB::beginTransaction();
+        try {
+            $cartItems = Cart::with('menuItem')->where('user_id', Auth::id())->get();
+            if ($cartItems->isEmpty()) {
+                throw new \Exception('سبد خرید خالی است.');
+            }
 
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'restaurant_id' => $request->restaurant_id,
-            'total' => $total,
-            'payment_method' => $request->payment_method,
-            'status' => 'pending',
-            'address' => $request->address
-        ]);
+            $total = $cartItems->sum(function ($item) {
+                return $item->menuItem->price * $item->quantity;
+            });
 
-        foreach ($request->items as $item) {
-            OrderItem::create([
-                'order_id' => $order->id,
-                'menu_item_id' => $item['menu_item_id'],
-                'quantity' => $item['quantity'],
-                'price' => MenuItem::find($item['menu_item_id'])->price
+            $order = Order::create([
+                'user_id' => Auth::id(),
+                'restaurant_id' => $cartItems->first()->menuItem->restaurant_id,
+                'courier_id' => \App\Models\User::where('role', 'courier')->inRandomOrder()->first()->id,
+                'total' => $total,
+                'payment_method' => $request->payment_method,
+                'status' => 'pending',
+                'address' => $request->address,
             ]);
-        }
 
-        return redirect()->route('profile')->with('success', 'سفارش شما ثبت شد!');
+            foreach ($cartItems as $item) {
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'menu_item_id' => $item->menu_item_id,
+                    'quantity' => $item->quantity,
+                    'price' => $item->menuItem->price,
+                ]);
+            }
+
+            Cart::where('user_id', Auth::id())->delete();
+
+            DB::commit();
+            return redirect()->route('profile')->with('success', 'سفارش شما با موفقیت ثبت شد!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('checkout')->with('error', 'خطا در ثبت سفارش: ' . $e->getMessage());
+        }
     }
 }
